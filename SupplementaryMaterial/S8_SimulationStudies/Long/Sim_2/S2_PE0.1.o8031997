@@ -1,0 +1,34 @@
+Admission File: /home/julius_id/tpham/ArtifSim/Data/Sim/admDatesSim_2.txt
+Culture File: /home/julius_id/tpham/ArtifSim/Data/Sim/cultureresultsSim_2.txt
+Number of updates: 530000
+Mean prevalence = 0.15
+**************************************
+Processing data for MCMC simulation
+**************************************
+Processing data or MCMC simulation. 
+Estimating parameters for endogenous route, cross-transmission AND environmental contamination.
+Prior mu: Exponential(0.1)
+Relabel wards
+Before while loop
+numberofpatients=3963040, numberofwards=1, maxdate=3964928
+numberofpatients=5205, numberofwards=1, maxdate=3964928
+smallest date =0
+numberofpatients=5205, numberofwards=1, maxdate=3651
+length culturearray=36509
+length admissionarray=36509
+newfactoraugmented=20
+listneverpos,listdefpos,listtemppos=4338, 867, 0
+E0 = 1.5
+Initial update of environment was successful.
+voor logl: maxdate=3651 startperiod=0 endperiod=3651
+logl = -10696.3
+na logl
+size=36509
+end file
+True positives=5871
+False negatives=3737
+E0 = 1.5
+Initial update of environment was successful.
+**************************
+start MCMC
+**************************
