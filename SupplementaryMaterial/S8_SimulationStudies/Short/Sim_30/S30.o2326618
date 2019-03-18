@@ -1,0 +1,45 @@
+Admission File: /home/julius_id/tpham/ArtifSim/Data/Sim/admDatesSim_30.txt
+Culture File: /home/julius_id/tpham/ArtifSim/Data/Sim/cultureresultsSim_30.txt
+Number of updates: 530000
+Mean prevalence = 0.15
+**************************************
+Processing data for MCMC simulation
+**************************************
+Processing data or MCMC simulation. 
+Estimating parameters for endogenous route, cross-transmission AND environmental contamination.
+Prior mu: Exponential(1.0)
+Relabel wards
+Before while loop
+numberofpatients=0, numberofwards=1, maxdate=0
+numberofpatients=3595, numberofwards=1, maxdate=0
+smallest date =0
+numberofpatients=3595, numberofwards=1, maxdate=3651
+length culturearray=36509
+length admissionarray=36509
+newfactoraugmented=25
+listneverpos,listdefpos,listtemppos=2476, 1119, 0
+E0 = 1.5
+Initial update of environment was successful.
+voor logl: maxdate=3651 startperiod=0 endperiod=3651
+logl = -13126.4
+na logl
+size=36509
+end file
+True positives=9135
+False negatives=4617
+E0 = 1.5
+Initial update of environment was successful.
+**************************
+start MCMC
+**************************
+i=0, a=0.01, b=0.01, f=0.15, c=0.01, nu=0.1, mu=0.01, E0=1.5, phi=0.8, TP=9135, FN=4617, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.2, sb=0.12, sc=0.12,snu=0.2, smu=0.12, acq[0]=767, daysatr[0]=26788, numImp=457, meanPrev=0.266263, logl=-7852.53
+ i=0, a=0.00767663, b=0.0783941, f=0.101838, c=0.0940719, nu=0.1, mu=0.368178, E0=0.0692094, phi=0.979966, TP=9135, FN=168, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0981993, sb=0.12, sc=0.0670493,snu=0.2, smu=0.12, acq[0]=791, daysatr[0]=27206, numImp=392, meanPrev=0.254814, logl=-5568.42
+ i=0, a=0.00866024, b=0.0756311, f=0.116047, c=0.0675576, nu=0.1, mu=0.243609, E0=0.104453, phi=0.980838, TP=9135, FN=155, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0981993, sb=0.12, sc=0.0281722,snu=0.2, smu=0.12, acq[0]=810, daysatr[0]=27218, numImp=390, meanPrev=0.254485, logl=-5574.45
+ i=0, a=0.0075871, b=0.0855582, f=0.103871, c=0.0675576, nu=0.1, mu=0.54384, E0=0.0467287, phi=0.98449, TP=9135, FN=143, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.05677, sb=0.0734919, sc=0.0117194,snu=0.2, smu=0.12, acq[0]=801, daysatr[0]=27231, numImp=387, meanPrev=0.254129, logl=-5484.49
+ i=0, a=0.0065965, b=0.0785354, f=0.10628, c=0.0675576, nu=0.1, mu=0.231192, E0=0.109933, phi=0.984988, TP=9135, FN=144, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0240513, sb=0.0734919, sc=0.00483339,snu=0.2, smu=0.12, acq[0]=806, daysatr[0]=27230, numImp=389, meanPrev=0.254157, logl=-5505.09
+ i=100000, a=0.0149744, b=0.0544476, f=0.105869, c=0.126211, nu=0.1, mu=0.590948, E0=0.0423408, phi=0.999912, TP=9135, FN=0, aa=0.08957, ba=0.1133, ca=0.07689, nua=0, mua=0.51744, sa=0.0240513, sb=0.0734919, sc=0.00483339,snu=0.2, smu=0.12, acq[0]=818, daysatr[0]=27374, numImp=376, meanPrev=0.250212, logl=-4796.27
+ i=200000, a=0.0052797, b=0.0321197, f=0.101479, c=0.981431, nu=0.1, mu=1.11861, E0=0.0223681, phi=0.99995, TP=9135, FN=0, aa=0.089625, ba=0.1137, ca=0.076595, nua=0, mua=0.522015, sa=0.0240513, sb=0.0734919, sc=0.00483339,snu=0.2, smu=0.12, acq[0]=822, daysatr[0]=27374, numImp=376, meanPrev=0.250212, logl=-4805.96
+ i=300000, a=0.0103112, b=0.0617672, f=0.105392, c=0.94635, nu=0.1, mu=2.47993, E0=0.0100906, phi=0.999709, TP=9135, FN=1, aa=0.0895533, ba=0.113843, ca=0.0768267, nua=0, mua=0.516673, sa=0.0240513, sb=0.0734919, sc=0.00483339,snu=0.2, smu=0.12, acq[0]=805, daysatr[0]=27373, numImp=377, meanPrev=0.25024, logl=-4760.64
+ i=400000, a=0.00834977, b=0.0677431, f=0.114884, c=0.784328, nu=0.1, mu=2.1577, E0=0.0115963, phi=0.999838, TP=9135, FN=0, aa=0.0899875, ba=0.114382, ca=0.0774175, nua=0, mua=0.5243, sa=0.0240513, sb=0.0734919, sc=0.00483339,snu=0.2, smu=0.12, acq[0]=829, daysatr[0]=27374, numImp=376, meanPrev=0.250212, logl=-4833.51
+ i=500000, a=0.00915562, b=0.0322608, f=0.108667, c=0.430257, nu=0.1, mu=0.619173, E0=0.0404107, phi=0.999972, TP=9135, FN=0, aa=0.089752, ba=0.1141, ca=0.077516, nua=0, mua=0.535688, sa=0.0240513, sb=0.0734919, sc=0.00483339,snu=0.2, smu=0.12, acq[0]=809, daysatr[0]=27374, numImp=376, meanPrev=0.250212, logl=-4755.35
+ Number of changes (sigma) = 4
