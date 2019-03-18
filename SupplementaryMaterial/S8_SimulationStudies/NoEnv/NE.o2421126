@@ -1,0 +1,56 @@
+Admission File: /home/julius_id/tpham/ArtifSim/Data/Sim/admDatesNoEnv.txt
+Culture File: /home/julius_id/tpham/ArtifSim/Data/Sim/cultureresultsNoEnv.txt
+Number of updates: 530000
+Mean prevalence = 0.15
+**************************************
+Processing data for MCMC simulation
+**************************************
+Processing data or MCMC simulation. 
+Estimating parameters for endogenous route, cross-transmission AND environmental contamination.
+Prior mu: Exponential(0.001)
+Relabel wards
+Before while loop
+numberofpatients=0, numberofwards=1, maxdate=0
+numberofpatients=3655, numberofwards=1, maxdate=0
+smallest date =0
+numberofpatients=3655, numberofwards=1, maxdate=3651
+length culturearray=13514
+length admissionarray=36509
+newfactoraugmented=25
+listneverpos,listdefpos,listtemppos=2908, 747, 0
+E0 = 1.5
+Initial update of environment was successful.
+voor logl: maxdate=3651 startperiod=0 endperiod=3651
+logl = -4946.04
+na logl
+size=13514
+end file
+True positives=2428
+False negatives=934
+E0 = 1.5
+Initial update of environment was successful.
+**************************
+start MCMC
+**************************
+i=0, a=0.01, b=0.01, f=0.15, c=0.01, nu=0.1, mu=0.01, E0=1.5, phi=0.8, TP=2428, FN=934, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.2, sb=0.2, sc=0.2,snu=0.2, smu=0.2, acq[0]=543, daysatr[0]=29059, numImp=429, meanPrev=0.204059, logl=-4974.35
+ i=0, a=0.01, b=0.026396, f=0.100753, c=0.01, nu=0.1, mu=0.471568, E0=0.0403915, phi=0.989453, TP=2428, FN=29, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0906313, sb=0.2, sc=0.111441,snu=0.2, smu=0.363717, acq[0]=427, daysatr[0]=29553, numImp=388, meanPrev=0.190528, logl=-3614.37
+ i=0, a=0.0106886, b=0.031621, f=0.109254, c=0.0962873, nu=0.1, mu=2.47556, E0=0.0077174, phi=0.988092, TP=2428, FN=33, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0601411, sb=0.12051, sc=0.0727332,snu=0.2, smu=0.901574, acq[0]=449, daysatr[0]=29543, numImp=386, meanPrev=0.190802, logl=-3704.36
+ i=0, a=0.00759213, b=0.0413702, f=0.104026, c=0.0554574, nu=0.1, mu=9.39924, E0=0.00201919, phi=0.99293, TP=2428, FN=23, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0373281, sb=0.12051, sc=0.0397756,snu=0.2, smu=1.52762, acq[0]=442, daysatr[0]=29576, numImp=382, meanPrev=0.189898, logl=-3633.34
+ i=0, a=0.0100504, b=0.0273878, f=0.10742, c=1.11666, nu=0.1, mu=12.4536, E0=0.00153254, phi=0.991066, TP=2428, FN=24, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.018933, sb=0.12051, sc=0.0397756,snu=0.2, smu=2.64196, acq[0]=455, daysatr[0]=29542, numImp=385, meanPrev=0.19083, logl=-3696.82
+ i=0, a=0.00881191, b=0.0305862, f=0.109813, c=1.87789, nu=0.1, mu=17.4706, E0=0.00109542, phi=0.98877, TP=2428, FN=16, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.018933, sb=0.12051, sc=0.0397756,snu=0.2, smu=4.03422, acq[0]=444, daysatr[0]=29524, numImp=378, meanPrev=0.191323, logl=-3600.05
+ i=0, a=0.0111101, b=0.0334793, f=0.103349, c=0.163251, nu=0.1, mu=47.7043, E0=0.000400084, phi=0.995364, TP=2428, FN=7, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.018933, sb=0.12051, sc=0.0397756,snu=0.2, smu=8.09834, acq[0]=477, daysatr[0]=29537, numImp=372, meanPrev=0.190967, logl=-3678.85
+ i=0, a=0.011474, b=0.0221262, f=0.0950548, c=3.1466, nu=0.1, mu=70.7038, E0=0.000269474, phi=0.997993, TP=2428, FN=7, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.018933, sb=0.12051, sc=0.016094,snu=0.2, smu=14.6773, acq[0]=470, daysatr[0]=29556, numImp=373, meanPrev=0.190446, logl=-3653.01
+ i=0, a=0.00875473, b=0.0379013, f=0.101859, c=0.63489, nu=0.1, mu=88.783, E0=0.000213551, phi=0.997863, TP=2428, FN=6, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0080582, sb=0.12051, sc=0.016094,snu=0.2, smu=35.3847, acq[0]=458, daysatr[0]=29588, numImp=373, meanPrev=0.18957, logl=-3588.18
+ i=0, a=0.00883609, b=0.0402332, f=0.108942, c=9.831, nu=0.1, mu=323.61, E0=5.8368e-05, phi=0.995469, TP=2428, FN=5, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0080582, sb=0.12051, sc=0.0101784,snu=0.2, smu=80.9171, acq[0]=449, daysatr[0]=29621, numImp=374, meanPrev=0.188666, logl=-3549.47
+ i=0, a=0.0079221, b=0.029496, f=0.104225, c=83.6105, nu=0.1, mu=511.731, E0=3.69752e-05, phi=0.99916, TP=2428, FN=2, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0080582, sb=0.12051, sc=0.0101784,snu=0.2, smu=147.782, acq[0]=466, daysatr[0]=29603, numImp=371, meanPrev=0.189159, logl=-3589.43
+ i=0, a=0.00797182, b=0.00929763, f=0.0967602, c=285.955, nu=0.1, mu=781.237, E0=2.41777e-05, phi=0.999546, TP=2428, FN=1, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0080582, sb=0.12051, sc=0.0101784,snu=0.2, smu=298.186, acq[0]=462, daysatr[0]=29616, numImp=371, meanPrev=0.188803, logl=-3564.77
+ i=0, a=0.00779803, b=0.0310053, f=0.100994, c=94.1301, nu=0.1, mu=913.649, E0=2.06137e-05, phi=0.999348, TP=2428, FN=1, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0080582, sb=0.12051, sc=0.00513594,snu=0.2, smu=522.242, acq[0]=456, daysatr[0]=29631, numImp=371, meanPrev=0.188392, logl=-3540.46
+ i=0, a=0.00800629, b=0.029579, f=0.106156, c=485.788, nu=0.1, mu=2446.91, E0=7.71707e-06, phi=0.99953, TP=2428, FN=1, aa=0, ba=0, ca=0, nua=0, mua=0, sa=0.0080582, sb=0.12051, sc=0.00513594,snu=0.2, smu=1285.88, acq[0]=454, daysatr[0]=29616, numImp=371, meanPrev=0.188803, logl=-3529.58
+ i=100000, a=0.0107737, b=0.0019823, f=0.0965709, c=594.111, nu=0.1, mu=2012.37, E0=9.39846e-06, phi=0.999368, TP=2428, FN=3, aa=0.11872, ba=0.07663, ca=0.07045, nua=0, mua=0.37829, sa=0.0080582, sb=0.12051, sc=0.00513594,snu=0.2, smu=1285.88, acq[0]=459, daysatr[0]=29605, numImp=373, meanPrev=0.189104, logl=-3573.38
+ i=200000, a=0.0101782, b=0.0309378, f=0.0960792, c=95.8292, nu=0.1, mu=1232.72, E0=1.53782e-05, phi=0.999969, TP=2428, FN=0, aa=0.11844, ba=0.077405, ca=0.07048, nua=0, mua=0.38188, sa=0.0080582, sb=0.12051, sc=0.00513594,snu=0.2, smu=1285.88, acq[0]=467, daysatr[0]=29588, numImp=371, meanPrev=0.18957, logl=-3586.68
+ i=300000, a=0.00921304, b=0.00579641, f=0.0927695, c=120.873, nu=0.1, mu=319.052, E0=5.91676e-05, phi=0.999465, TP=2428, FN=0, aa=0.11826, ba=0.07793, ca=0.0704033, nua=0, mua=0.38237, sa=0.0080582, sb=0.12051, sc=0.00513594,snu=0.2, smu=1285.88, acq[0]=463, daysatr[0]=29615, numImp=371, meanPrev=0.18883, logl=-3561.54
+ i=400000, a=0.008934, b=0.0379418, f=0.102575, c=72.1754, nu=0.1, mu=1857.26, E0=1.01377e-05, phi=0.998667, TP=2428, FN=1, aa=0.11842, ba=0.077715, ca=0.07068, nua=0, mua=0.378532, sa=0.0080582, sb=0.12051, sc=0.00513594,snu=0.2, smu=1285.88, acq[0]=467, daysatr[0]=29633, numImp=371, meanPrev=0.188337, logl=-3593.47
+ i=500000, a=0.0112754, b=0.0128259, f=0.0933426, c=69.8641, nu=0.1, mu=620.968, E0=3.03649e-05, phi=0.99888, TP=2428, FN=1, aa=0.118562, ba=0.078138, ca=0.070712, nua=0, mua=0.376088, sa=0.0080582, sb=0.12051, sc=0.00513594,snu=0.2, smu=1285.88, acq[0]=454, daysatr[0]=29624, numImp=372, meanPrev=0.188584, logl=-3545.81
+ Number of changes (sigma) = 13
+Line = 131
+Time to compute = 258980s
