@@ -1,0 +1,32 @@
+OBJS = main.o readcsv.o relabel.o logl.o changelogl.o createdata.o TPFN.o samplenormal.o
+CC = g++
+FLAGS = -Wall
+LIBS = -L/usr/include/boost
+
+all : main
+
+main : $(OBJS) 
+	$(CC) $(FLAGS) $(LIBS) $(OBJS) -o main.out
+
+main.o : main.cpp
+
+readcsv.o : readcsvfileto2Darrayofint.cpp readcsvfileto2Darrayofint.h 
+	$(CC) $(FLAGS) readcsvfileto2Darrayofint.cpp
+
+relabel.o : relabel.h relabel.cpp
+	$(CC) $(FLAGS) relabel.cpp
+
+logl.o : loglikelihood.h loglikelihood.cpp
+	$(CC) $(FLAGS) loglikelihood.cpp
+
+createdata.o : createusefuldata.h createusefuldata.cpp
+	$(CC) $(FLAGS) createusefuldata.cpp
+
+TPFN.o : truepositiveandfalsenegative.h truepositiveandfalsenegative.cpp
+	$(CC) $(FLAGS) truepositiveandfalsenegative.cpp
+
+samplenormal.o : samplefromnormal.h samplefromnormal.cpp
+	$(CC) $(FLAGS) samplefromnormal.cpp
+
+clean: 
+	\rm *. *~ main
