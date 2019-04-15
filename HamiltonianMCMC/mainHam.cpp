@@ -20,27 +20,30 @@
 #include "environment.h"
 #include <time.h>
 
-// MCMC SIMULATION FOR NEW ENVIRONMENTAL CONTRIBUTION
-
-using namespace std;
 /***********************************************************************
-  * Sorting function
-* sort based on second element
-***********************************************************************/
-  bool sortFunc1( const vector<int>& p1,const vector<int>& p2 )
-{
-  return p1.at(1) < p2.at(1);
+ * MCMC SIMULATION FOR 
+ * Background transmission,
+ * Cross-transmission and
+ * Environmental contamination after discharge
+ ***********************************************************************/
+using namespace std;
+
+/***********************************************************************
+ * SORTING function
+ * sort based on second element
+ **********************************************************************/
+  bool sortFunc1( const vector<int>& p1,const vector<int>& p2 ){
+    return p1.at(1) < p2.at(1);
   }
 
 /***********************************************************************
-  * Main function
-***********************************************************************/
+ * MAIN function
+ **********************************************************************/
   
-  int main()
-{
+  int main(){
   /**********************************************************************
-    * DECLARE VARIABLES
-  **********************************************************************/
+   * DECLARE VARIABLES
+   *********************************************************************/
     time_t timer = time(NULL);
   // extern int parallelism_enabled=0; // Multithread if = 1
   
@@ -56,70 +59,74 @@ using namespace std;
   /// Declare variables for data augmentation
   int factoraugmented,changeaugmented,newfactoraugmented;
   
+  /// Loglikelihood computation
   double oldlogl;
   
   int newadmissionstate,newacquisitionday,newacquisition,oldadmissionstate,oldacquisitionday,oldacquisition;
   
   int dummy,truepositive,falsenegative,posatadmission,negatadmission,event,change;
   double newa,newb,newlogl,p,r,x,y,q;//logp,
-  double newc, newnu, newmu; /// ADDED to Martins code
+  double newc, newnu, newmu; 
   
+  /// Auxiliary variable for data-augmentation step
   int thesize,donothing,index,i,ward;
+  
+  /// Multiple wards
   vector<double> newalpha(numberofwards),newbeta(numberofwards), newgamma(numberofwards), newnuvector(numberofwards), newmuvector(numberofwards);
   
-  int acqday; /// For loop over number of patients
+  /// For computing relative contribution 
+  int acqday; 
   double contralpha, contrbeta, contrE, contrCrossT, contrEnv;
   
   
   // For startline output
   int out = 0; 
   /**********************************************************************
-    * DEFINE PARAMETERS FOR MCMC
-  **********************************************************************/
-    int thinning=10,thinningscreen=100000;
+   * DEFINE PARAMETERS FOR MCMC
+   *********************************************************************/
+  int thinning=10,thinningscreen=100000;
   int thinningfoi=10000;
-  int onlyaugmented=0; ///if 1 only augmented data are updated
-  /**frequencydependence=0 means density dependence,
-  *  frequencydependence=1 means frequency dependence **/
-    int frequencydependece =1;
+  int onlyaugmented=0; /// if 1 only augmented data are updated
+  /*frequencydependence=0 means density dependence,
+   *frequencydependence=1 means frequency dependence */
+  int frequencydependece =1;
   long int numberofupdates=530000;
   
-  /* parameter w defines the probability that a new colonization
-  * time is an admission */
-    double w=0.2;
+  /// parameter w = probability that new colonization time is an admission
+  double w=0.2;
   
   /**********************************************************************
   * Initial standarddeviation proposal distribution for
   * alpha, beta
   * gamma(c), mu, nu, E0 (added to Martins code)
   **********************************************************************/
-    double sigmaa=0.2; double sigmab=0.12; // was sigmab=0.12 before
-  // Do Not know which value here to take:
-    double sigmac=0.15, sigmanu = 0.2, sigmamu=0.12, sigmaE0=0.2;
+  double sigmaa=0.2; double sigmab=0.12; 
+  double sigmac=0.15, sigmanu = 0.2, sigmamu=0.12, sigmaE0=0.2;
   // For adaptation of acceptance ratio for gamma in Hamiltonian MCMC
   double newsigmac = 0.12, newmuc = 0.0, propratio = 1.0, newmub=0.0, newsigmab=0.12;
-  /** sigmaa and sigmab are modified such that acceptance rate more or
-  *  less between lowerboundacceptance and upperboundacceptance **/
-    double lowerboundacceptance=0.05;
+  /* sigmaa and sigmab are modified such that acceptance rate more or
+   * less between lowerboundacceptance and upperboundacceptance */
+  double lowerboundacceptance=0.05;
   double upperboundacceptance=0.5;
-  /** updatetochangesigma determines number of updates to check whether
-  * acceptancerate for a and b are reasonable **/
-    int updatestochangesigma=100;
+  /*updatetochangesigma determines number of updates to check whether
+   *acceptancerate for a and b are reasonable */
+  int updatestochangesigma=100;
   
   /// Define seed for the random number generator
   int seed=40;
   /*******************************
-    change to
-  ENG eng(std::time(0));
-  to have random starting of chain
-  *******************************/
-    /**********************************************************************
-    * Initial values of MCMC chain
-  * --------------------------------------------------------------------
-    * alpha = a, beta = b, importation rate = f, sensitivity = phi
-  * gamma = c, nu, mu, E0 (added to Martins code)
-  **********************************************************************/
-    parameters param;
+   * change to
+   * ENG eng(std::time(0));
+   * to have random starting of chain
+   *******************************/
+  
+  /**********************************************************************
+   * Initial values of MCMC chain
+   * --------------------------------------------------------------------
+   * alpha = a, beta = b, importation rate = f, sensitivity = phi
+   * epsilon = c, nu, mu, E0 (parameters for env. cont.)
+   **********************************************************************/
+  parameters param;
   param.a=0.01;
   param.b=0.01;
   param.f=0.15;
@@ -135,11 +142,11 @@ using namespace std;
   
   
   /**********************************************************************
-    * ADDED: Parameters for environmental contamination
-  * --------------------------------------------------------------------
-    * addingenvironment = 1 if environmental contamination should be added
-  * to force of infection, 0 otherwise
-  **********************************************************************/
+   * ADDED: Parameters for environmental contamination
+   * --------------------------------------------------------------------
+   * addingenvironment = 1 if environmental contamination should be added
+   * to force of infection, 0 otherwise
+   **********************************************************************/
   int addingenvironment = 0;
   int endogenous = 1, exogenous = 1;
   double newE0; double meanE;
@@ -149,103 +156,42 @@ using namespace std;
   int startperiod=0; /// defined with first date set to day zero
   int endperiod=200; /// defined with first date set to day zero
   
-  /// Added caccepted =0, nuaccepted, muaccepted
+  /// Added caccepted=0, nuaccepted, muaccepted
   /// counts accepted updates for alpha and beta
   long int aaccepted=0,baccepted=0,caccepted=0, nuaccepted=0, muaccepted=0;
   /**********************************************************************
-    // Determine prior distributions
-  * ---------------------------------------------------------------------
-    * Sensitivity test has as prior distribution a beta distribution with
-  * parameters aa and bb.
-  * Parameters endogenous route and cross transmisison (alpha and beta)
-  * have as prior an exponential ditribution with parameter lambda
-  **********************************************************************/
+   * Determine prior distributions
+   * --------------------------------------------------------------------
+   * Sensitivity test has as prior distribution a beta distribution with
+   * parameters aa and bb.
+   * Parameters endogenous route and cross transmisison (alpha and beta)
+   * have as prior an exponential ditribution with parameter lambda
+   *********************************************************************/
     double aa=1.,bb=1.,lambda=0.001, lambda2=1.0;
   
   /**********************************************************************
-    * PRIOR DISTRIBUTION for
-  * --------------------------------------------------------------------
-    * alpha, beta
-  * gamma, nu, mu, E0 (added to Martins code)
-  **********************************************************************/
-    
+   * PRIOR DISTRIBUTION for
+   *--------------------------------------------------------------------
+   * alpha, beta
+   * gamma, nu, mu, E0 (added to Martins code)
+   *********************************************************************/
+  boost::math::exponential_distribution<>prioralpha(lambda);  
   boost::math::exponential_distribution<>priorbeta(lambda);
-  //boost::math::uniform_distribution<>priorbeta(0,2);
-  boost::math::exponential_distribution<>prioralpha(lambda);
-  //boost::math::uniform_distribution<>prioralpha(0,2);
   boost::math::exponential_distribution<>priorgamma(lambda);
-  //boost::math::uniform_distribution<>priorgamma(0,2);
   boost::math::exponential_distribution<>priornu(lambda);
   //boost::math::exponential_distribution<>priormu(lambda); string priormustring="Exponential(0.001)";
   boost::math::uniform_distribution<>priormu(0,2); string priormustring="U(0,2)";
   boost::math::exponential_distribution<>priorE0(lambda);
   
   /// Does each ward has its own parameters for alpha, beta or not?
-    int multipleparameters=0;
+  int multipleparameters=0;
   
   /**********************************************************************
-    * INPUT DATA
-  /*********************************************************************/
-    
-    /*
-    string env = "Env"; string icu = "D7121"; string hosp = "Besancon";
-  string resultspath="../../"+hosp+"Hospital/Results/7121/UnitD/Test/";
-  string savefile = resultspath + "mytestresults" + hosp + icu + env + ".txt";
-  string envfile = resultspath + "myenvresults" + hosp + icu + env + ".txt";
-  string envstayfile=resultspath + "myenvstayresults" + hosp + icu + env + ".txt";
-  string envdisfile=resultspath + "myenvdisresults" + hosp + icu + env + ".txt";
-  string prevfile = resultspath + "myprevresults" + hosp + icu + env + ".txt";
-  string Nfile = resultspath + "myNresults" + hosp + icu + env + ".txt";
-  string acqfile = resultspath + "myacqresults" + hosp + icu + env + ".txt";
-  string startline = resultspath + "mystartline" + hosp + icu + env + ".txt";
-  string patientsfile = resultspath + "mypatients" + hosp + icu + env + ".txt";
-  string colstatusfile = resultspath + "colstatus" + icu + env + ".txt";
-  // Input File
-  string datapath = "../../" + hosp + "Hospital/Data/";
-  string admissiondata = datapath + "admDates" + hosp + icu + ".txt";
-  string culturedata = datapath + "cultureresults" + hosp + icu + ".txt";
-  */
+   * INPUT DATA
+   *********************************************************************/
 
-  /*
-  string env = ""; string icu = "AspireICU_2"; string hosp = "";
-  string resultspath="../../ArtifSim/Results/AspireICU/2/";
-  string savefile = resultspath + "mytestresults" + icu + env + ".txt";
-  string meanParam = resultspath + "meanParam" + icu + env + ".txt";
-  string foifile = resultspath + "myfoiresults" + icu + env + ".txt";
-  string envfile = resultspath + "myenvresults" + icu + env + ".txt";
-  string envstayfile=resultspath + "myenvstayresults" + icu + env + ".txt";
-  string envdisfile=resultspath + "myenvdisresults" + icu + env + ".txt";
-  string prevfile = resultspath + "myprevresults" + icu + env + ".txt";
-  string Nfile = resultspath + "myNresults" + icu + env + ".txt";
-  string acqfile = resultspath + "myacqresults" + icu + env + ".txt";
-  string startline = resultspath + "mystartline" + icu + env + ".txt";
-  string patientsfile = resultspath + "mypatients" + icu + env + ".txt";
-  string colstatusfile = resultspath + "colstatus" + icu + env + ".txt";
-  // Input File
-  string datapath = "../../ArtifSim/Data/AspireICU/";
-  string admissiondata = datapath + "admDates" + hosp + icu + ".txt";
-  string culturedata = datapath + "cultureresults" + hosp + icu + ".txt";
-  */
-  
-    /**
-    string savefile="../../BesanconHospital/Results/mytestresults7441.txt";
-  //string foifile="../../BesanconHospital/Results/myfoiresults7441.txt";
-  string envfile="../../BesanconHospital/Results/myenvresults7441.txt";
-  string prevfile="../../BesanconHospital/Results/myprevresults7441.txt";
-  string Nfile="../../BesanconHospital/Results/myNresults7441.txt";
-  string startline="../../BesanconHospital/Results/mystartline7441.txt";
-  string acqfile="../../BesanconHospital/Results/myacqresults7441.txt";
-  // Input File
-  string admissiondata="../../BesanconHospital/Data/admDates7441.txt";
-  string culturedata="../../BesanconHospital/Data/cultureresults7441.txt";
-  **/
-    
-    /**********************************************************************
-    * FOR RUNNING ON THE HPC CLUSTER
-  /*********************************************************************/
-    
-    /**
-    string resultspath="/home/julius_id/tpham/UtrechtHospital/Results/HPC07122017/";
+  /**
+  string resultspath="/home/julius_id/tpham/UtrechtHospital/Results/HPC07122017/";
   string env = "Env"; string icu = "1";
   string savefile = resultspath + "mytestresultsUtrecht" + icu + env + ".txt";
   string envfile = resultspath + "myenvresultsUtrecht" + icu + env + ".txt";
@@ -324,43 +270,21 @@ using namespace std;
     string admissiondata = datapath + "admDates" + hosp + icu + ".txt";
     string culturedata = datapath + "cultureresults" + hosp + icu + ".txt";
   */
-    
-  /*
-  string env = ""; string icu = "AspireICU_3"; string hosp = "";
-  string resultspath="/home/julius_id/tpham/ArtifSim/Results/AspireICU/3Long/";
-  string savefile = resultspath + "mytestresults" + icu + env + ".txt";
-  string meanParam = resultspath + "meanParam" + icu + env + ".txt";
-  string foifile = resultspath + "myfoiresults" + icu + env + ".txt";
-  string envfile = resultspath + "myenvresults" + icu + env + ".txt";
-  string envstayfile=resultspath + "myenvstayresults" + icu + env + ".txt";
-  string envdisfile=resultspath + "myenvdisresults" + icu + env + ".txt";
-  string prevfile = resultspath + "myprevresults" + icu + env + ".txt";
-  string Nfile = resultspath + "myNresults" + icu + env + ".txt";
-  string impfile = resultspath + "myimpresults" + icu + env + ".txt";
-  string acqfile = resultspath + "myacqresults" + icu + env + ".txt";
-  string startline = resultspath + "mystartline" + icu + env + ".txt";
-  string patientsfile = resultspath + "mypatients" + icu + env + ".txt";
-  string colstatusfile = resultspath + "colstatus" + icu + env + ".txt";
-  // Input File
-  string datapath = "/home/julius_id/tpham/ArtifSim/Data/AspireICU/";
-  string admissiondata = datapath + "admDates" + hosp + icu + ".txt";
-  string culturedata = datapath + "cultureresults" + hosp + icu + ".txt";
-  */
-  
   
   /**********************************************************************
-    * PROCESSING INPUT DATA
-  /*********************************************************************/
+   * PROCESSING INPUT DATA
+   *********************************************************************/
     
-    /**********************************************************************
-    * culturedata is of form: patid, date, result
+  /**********************************************************************
+  * culturedata is of form: patid, date, result
   * admissiondata is of form: patid, date, roomnumber
   * Assume rooms are labeled with integers
   * Dates are in integers
   * Patient ID are integers
   * day with the label i runs from day i: 12.00 -> day i+1, 11.59
   **********************************************************************/
-  cout << "Admission File: " << admissiondata << endl; cout << "Culture File: " << culturedata << endl;
+  cout << "Admission File: " << admissiondata << endl; 
+  cout << "Culture File: " << culturedata << endl;
   cout << "Number of updates: " << numberofupdates << endl;
   cout << "Mean prevalence = " << meanPrev << endl;
   
@@ -379,16 +303,12 @@ using namespace std;
   if(addingenvironment){
     cout << "Estimating parameters for endogenous route, cross-transmission AND environmental contamination." << endl;
     cout << "Prior mu: " << priormustring << endl;
-  } else{
-    cout << "Estimating parameters for endogenous route and cross-transmission." << endl;
-  }
-  
+  } else cout << "Estimating parameters for endogenous route and cross-transmission." << endl;
   
   cout << "Relabel wards" << endl;
   /// relabelwards: Wards are relabeled with integers: 0, 1,2,3,...,N-1
   relabelwards(admissionarray,&numberofwards);
   cout << "numberofpatients="<<numberofpatients<<", numberofwards="<<numberofwards<<", maxdate="<<maxdate<<"\n";
-  /// printarray(admissionarray, admissiondata);
   /// relabelpatientID: Patient ID are relabeled: 0, 1, 2, 3, ...., M-1
   relabelpatientID(admissionarray,culturearray,&numberofpatients);
   cout << "numberofpatients="<<numberofpatients<<", numberofwards="<<numberofwards<<", maxdate="<<maxdate<<"\n";
@@ -396,21 +316,18 @@ using namespace std;
   relabeldates(admissionarray,culturearray,&maxdate);
   
   cout << "numberofpatients="<<numberofpatients<<", numberofwards="<<numberofwards<<", maxdate="<<maxdate<<"\n";
-  ///printarray(admissionarray, admissiondata);printarray(culturearray,culturedata);
   cout <<"length culturearray="<<culturearray.size()<<endl;
   cout <<"length admissionarray="<<admissionarray.size()<<endl;
   
-  /** factoraugmented: Number of augmentation steps
-  * changed later on if numberofiteration >changeaugmented **/
+  /*factoraugmented: Number of augmentation steps
+   *changed later on if numberofiteration > changeaugmented */
   factoraugmented=numberofpatients*10; 
   changeaugmented=2;
-  newfactoraugmented=25;
-  //newfactoraugmented=1+numberofpatients/4;
+  newfactoraugmented=25; //newfactoraugmented=1+numberofpatients/4;
   cout <<"newfactoraugmented="<<newfactoraugmented<<endl;
   
   /// Initialize parameter vectors now since unit is defined
-  for(unit=0;unit<numberofwards;unit++)
-  {
+  for(unit=0;unit<numberofwards;unit++){
     (param.alphavector).push_back(param.a);
     (param.betavector).push_back(param.b);
     
@@ -418,38 +335,47 @@ using namespace std;
     (param.nuvector).push_back(param.nu);
     (param.muvector).push_back(param.mu);
   }
-  ///cout <<"lengte alpha="<<param.alphavector.size()<<endl;
-  ///cout <<"lengte beta="<<param.betavector.size()<<endl;
   
-  
+  /// N = Number of patients per day
   vector<vector<int> > N(numberofwards, vector<int>(maxdate,0));
-  /** whereabouts:
-    * For each patient it includes a vector with days on which the patient
-  * is present. Note whereabouts of patient i startperiod at
-  * admissionday of i **/
-    vector<vector<int> > whereabouts(numberofpatients);
-  /** colstatus:
-    * note colstatus of patient i start at admissionday of i
-  * -1, already colonized,
-  * 0,  no acquisition during that day,
-  * 1,  acquisition during that day. **/
-    vector<vector<int> > colstatus(numberofpatients);
+  /* whereabouts:
+   * For each patient it includes a vector with days on which the patient
+   * is present. Note whereabouts of patient i startperiod at
+   * admissionday of i **/
+  vector<vector<int> > whereabouts(numberofpatients);
+  /* colstatus:
+   * note colstatus of patient i start at admissionday of i
+   * -1, already colonized,
+   * 0,  no acquisition during that day,
+   * 1,  acquisition during that day. **/
+  vector<vector<int> > colstatus(numberofpatients);
+  /// admissionday and dischargeday per patient
   vector<int> admissionday(numberofpatients,maxdate+10),dischargeday(numberofpatients,-1);
   std::sort (admissionarray.begin(), admissionarray.end(), sortFunc1);
+  /* numberofpatientsperward:
+   * Fill vectors N, whereabouts, admissionday, dischargeday according to observed data. */
   numberofpatientsperward(N,admissionarray,whereabouts,admissionday,dischargeday);
-  /** present:
-    * per ward, per day a list of which patients are present in the unit.**/
-    vector<vector<vector<int> > > present (numberofwards,vector<vector<int> >(maxdate,vector <int>()));
+  /* present:
+   * per ward, per day a list of which patients are present in the unit. */
+  vector<vector<vector<int> > > present (numberofwards,vector<vector<int> >(maxdate,vector <int>()));
   whopresentwhen(present, admissionarray);
   
+  /// Vector with patient Ids that are never, definitely or temporary positive
   vector<int> listneverpos,listdefpos,listtemppos;
   vector<vector<int> > cultureperpatient(numberofpatients);
-  vector<int> admissionstate(numberofpatients, 1);/* 0 uncolonized upon admission, 1 colonized upon admission */
-    vector<int> acquisition(numberofpatients,0);/* 0=no acquisition, 1 acquisition */
-    vector<int> acquisitionday(numberofpatients,-1);/* acquisition is during that day (at end of that specific day (11.59 next day)) */
-    vector<vector<int> > I(numberofwards, vector<int>(maxdate,0));
+  /// admissionstate: 0 uncolonized upon admission, 1 colonized upon admission 
+  vector<int> admissionstate(numberofpatients, 1);
+  /// acquisition: 0=no acquisition, 1 acquisition */
+  vector<int> acquisition(numberofpatients,0);
+  /// acquisitionday> acquisition is during that day (at end of that specific day (11.59 next day))
+  vector<int> acquisitionday(numberofpatients,-1);
+  /// I = Number of colonized patients per day
+  vector<vector<int> > I(numberofwards, vector<int>(maxdate,0));
+  /// numberofacquisitions = Number of acquisitions per day
   vector<vector<int> > numberofacquisitions(numberofwards, vector<int>(maxdate,0));
+  /// daysatrisk = Number of days at risk per ward
   vector<int> daysatrisk(numberofwards);
+  /// totalacquisitions = Number of acquisitions per ward
   vector<int> totalacquisitions(numberofwards);
   
   
@@ -461,6 +387,7 @@ using namespace std;
   numberofinfectiouspatientsperward(I,whereabouts,colstatus,admissionday,acquisitionday,admissionstate,acquisition,numberofacquisitions);
   ///printarray(colstatus,"");
   int patient,indexday;
+  /// Define the vectors linstneverpos, listdefpos, listtempos
   defineneverposdefpostemppos(listneverpos,listdefpos,listtemppos,admissionstate,acquisition,culturearray,cultureperpatient);
   cout<<"listneverpos,listdefpos,listtemppos="<<listneverpos.size()<<", "<<listdefpos.size()<<", "<<listtemppos.size()<<endl;
   
@@ -469,15 +396,15 @@ using namespace std;
   
   
   /**********************************************************************
-    * ADDED: Initilaization of environmental contamination
-  * --------------------------------------------------------------------
-    * E: Vector for environmental contamination for each ward and each day
-  * E_stay: Vector for env.cont. for each ward and each day contributed
-  * by present patients
-  * E_dis: Vector for env.cont. for each ward and each day contributed
-  * by discharged patients
-  * *******************************************************************/
-    vector<vector<double> > E(numberofwards, vector<double>(maxdate+1,0));
+   * ADDED: Initilaization of environmental contamination
+   * --------------------------------------------------------------------
+   * E: Vector for environmental contamination for each ward and each day
+   * E_stay: Vector for env.cont. for each ward and each day contributed
+   * by present patients
+   * E_dis: Vector for env.cont. for each ward and each day contributed
+   * by discharged patients
+   * *******************************************************************/
+  vector<vector<double> > E(numberofwards, vector<double>(maxdate+1,0));
   vector<vector<double> > E_stay(numberofwards, vector<double>(maxdate+1,0));
   vector<vector<double> > E_dis(numberofwards, vector<double>(maxdate+1,0));
   if(addingenvironment == 1){
@@ -490,30 +417,22 @@ using namespace std;
   /// Update endperiod (added to Martins code)
   endperiod = maxdate;
   cout <<"voor logl: maxdate="<<maxdate<<" startperiod="<<startperiod<<" endperiod="<<endperiod<<endl;
-  
-  /**
-    cout << "Numberofacquisitions=" << endl; printarray(numberofacquisitions, "");
-  cout << "Number of infected patients=" << endl; printarray(I, "");
-  cout << "Number of patients=" << endl; printarray(N, "");
-  cout << "E=" << endl; printarray(E, "");
-  * **/
     
-    /// First logllikelihood computation
+  /// First logllikelihood computation
   double logl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,param,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
   cout << "logl = " << logl << "\n";
   cout <<"na logl"<<endl;
   
-  // Why again?
-    numberofinfectiouspatients2(I,whereabouts,colstatus,admissionday,acquisitionday,admissionstate,acquisition,numberofacquisitions,maxdate,numberofwards);
+  numberofinfectiouspatients2(I,whereabouts,colstatus,admissionday,acquisitionday,admissionstate,acquisition,numberofacquisitions,maxdate,numberofwards);
   
-  /** possibleacquisitiondays:
-    * determine possible days of acquisition per patient */
-    vector<int> possibleacquistiondays(numberofpatients);
+  /// possibleacquisitiondays: determine possible days of acquisition per patient 
+  vector<int> possibleacquistiondays(numberofpatients);
   determinepossibleacquisitiondays(possibleacquistiondays,culturearray,whereabouts,admissionday);
   
   typedef boost::mt19937  ENG;    /* Mersenne Twister: NOT SEEDED YET */
-    ENG eng(seed);
+  ENG eng(seed);
   
+  /// Initial parameters for multiple wards
   parameters paramnew;
   for(unit=0;unit<numberofwards;unit++)
   {
@@ -528,40 +447,30 @@ using namespace std;
   /**********************************************************************
     * Definition of file streams for saving output
   *********************************************************************/
-    ofstream myfile;
-  myfile.open(savefile.c_str());
-  ofstream mymeanfile;
-  mymeanfile.open(meanParam.c_str());
+  ofstream myfile; myfile.open(savefile.c_str());
+  ofstream mymeanfile; mymeanfile.open(meanParam.c_str());
   
-  ofstream mystartfile;
-  mystartfile.open(startline.c_str());
+  ofstream mystartfile; mystartfile.open(startline.c_str());
   
-  ofstream myfoifile;
-  myfoifile.open(foifile.c_str());
-  ofstream myprevfile;
-  myprevfile.open(prevfile.c_str());
-  ofstream myNfile;
-  myNfile.open(Nfile.c_str());
-  ofstream myacqfile;
-  myacqfile.open(acqfile.c_str());
-  ofstream myimpfile;
-  myimpfile.open(impfile.c_str());
+  ofstream myfoifile; myfoifile.open(foifile.c_str());
+  ofstream myprevfile; myprevfile.open(prevfile.c_str());
+  ofstream myNfile; myNfile.open(Nfile.c_str());
+  ofstream myacqfile; myacqfile.open(acqfile.c_str());
+  ofstream myimpfile; myimpfile.open(impfile.c_str());
   
-  ofstream myenvfile;
-  myenvfile.open(envfile.c_str());
-  ofstream myenvstayfile;
-  myenvstayfile.open(envstayfile.c_str());
-  ofstream myenvdisfile;
-  myenvdisfile.open(envdisfile.c_str());
+  ofstream myenvfile; myenvfile.open(envfile.c_str());
+  ofstream myenvstayfile; myenvstayfile.open(envstayfile.c_str());
+  ofstream myenvdisfile; myenvdisfile.open(envdisfile.c_str());
   
   /*
-    ofstream mypatients;
+  ofstream mypatients;
   mypatients.open(patientsfile.c_str());
   ofstream colstat;
   colstat.open(colstatusfile.c_str());
   */
     
-    myfile <<"i,f,phi,logl,nImp,meanPrev,alpha,beta,eps,nu,mu,E0,TP,FN,aacceptrate,bacceptrate,cacceptrate,muacceptrate,sigmaa,sigmab,sigmac,sigmamu,acq,daysatr,contralpha,contrbeta,contrE,contrCrossT,contrEnv"<<"\n";
+  /// Header of mytestresults
+  myfile <<"i,f,phi,logl,nImp,meanPrev,alpha,beta,eps,nu,mu,E0,TP,FN,aacceptrate,bacceptrate,cacceptrate,muacceptrate,sigmaa,sigmab,sigmac,sigmamu,acq,daysatr,contralpha,contrbeta,contrE,contrCrossT,contrEnv"<<"\n";
   
   /// Computing true positives and false negatives
   truepositiveandfalsenegative(&truepositive,&falsenegative,culturearray,admissionday,colstatus,startperiod,endperiod);
@@ -569,26 +478,20 @@ using namespace std;
   cout << "False negatives="<<falsenegative<<endl;
   if(addingenvironment == 1){
     cout << "E0 = " << param.E0 << "\n";
-    ///updateenvironment(param,I,N,E,numberofwards,maxdate); // Calculate environmental load with initial number of infectious patients, inital parameters and inital bacterial load E0
     updateenvironment2(param,I,N,admissionstate,acquisition,acquisitionday,admissionday,dischargeday,E,E_stay,E_dis,numberofwards,maxdate);
     cout << "Initial update of environment was successful." << endl;
   }
-  
-  /*
-    for(i=0;i<whereabouts.size();i++)
-    {
-      cout << i << ", admission="<< admissionday[i]<<", discharge="<< dischargeday[i]<<"\n";
-    }
-  */
-    cout << "**************************"<<endl;
-  cout <<"start MCMC\n";
-  cout << "**************************"<<endl;
+
+
   
   
   /**********************************************************************
-    *  start the MCMC algorithm.
-  *********************************************************************/
-    i=0;
+   *  start the MCMC algorithm.
+   *********************************************************************/
+  cout << "**************************"<<endl;
+  cout <<"start MCMC\n";
+  cout << "**************************"<<endl;
+  i=0;
   /// this part ensures that the acceptance rate of alpha and beta is approximately between 0.05 and 0.5
   while(i<numberofupdates){
     if(onlyaugmented!=1)
@@ -624,7 +527,6 @@ using namespace std;
         }
         
         if(addingenvironment == 1){
-          /// ADDED
           if((double)caccepted/(double)updatestochangesigma<lowerboundacceptance)
           {
             sigmac=sigmac/samplefromrealuniform(1.5, 2.5, &eng);change=1;
@@ -635,47 +537,28 @@ using namespace std;
             sigmac=sigmac*samplefromrealuniform(1.5, 2.5, &eng);change=1;
             ///cout<<"Change c. Upper bound. \n";
           }
-          /*
-            if((double)nuaccepted/(double)updatestochangesigma<lowerboundacceptance)
-            {
-              sigmanu=sigmanu/samplefromrealuniform(1.5, 2.5, &eng);change=1;
-              ///cout<<"Change nu. Lower bound.\n";
-            }
-          if((double)nuaccepted/(double)updatestochangesigma>upperboundacceptance)
+          if((double)muaccepted/(double)updatestochangesigma<lowerboundacceptance)
           {
-            sigmanu=sigmanu*samplefromrealuniform(1.5, 2.5, &eng);change=1;
-            ///cout<<"Change nu. Upper bound.\n";
+            sigmamu=sigmamu/samplefromrealuniform(1.5, 2.5, &eng);change=1;
+            ///cout<<"Change mu. Lower bound. \n";
           }
-          */
-            if((double)muaccepted/(double)updatestochangesigma<lowerboundacceptance)
-            {
-              sigmamu=sigmamu/samplefromrealuniform(1.5, 2.5, &eng);change=1;
-              ///cout<<"Change mu. Lower bound. \n";
-            }
           if((double)muaccepted/(double)updatestochangesigma>upperboundacceptance)
           {
             sigmamu=sigmamu*samplefromrealuniform(1.5, 2.5, &eng);change=1;
             ///cout<<"Change mu. Upper bound.\n";
           }
-          
         }
-        /// END ADDED
-        if(change==1){i=0;aaccepted=0;baccepted=0;caccepted=0;nuaccepted=0;muaccepted=0;nchange+=1;}
-      }
-      if(i==0)
-      {
-        inew=updatestochangesigma;
-      }else
-      {
-        inew=i;
+      if(change==1){i=0;aaccepted=0;baccepted=0;caccepted=0;nuaccepted=0;muaccepted=0;nchange+=1;}
       }
       
-      if(i==changeaugmented)factoraugmented=newfactoraugmented;
+      if(i==0) inew=updatestochangesigma;
+      else inew=i;
+
+      if(i==changeaugmented) factoraugmented=newfactoraugmented;
       
       /**update param.a;*****/
           if(i>0)
           {
-            ///cout << "i>0" <<endl;
             if(multipleparameters==0)
             {
               foi = (double)endogenous*param.a + (double)exogenous*param.b*meanPrev + (double)addingenvironment*param.c*meanE;
@@ -683,7 +566,7 @@ using namespace std;
                 
                 /**update param.a ***/
                   paramnew.b=param.b;
-                  /// ADDED
+
                   paramnew.c=param.c;
                   paramnew.nu=param.nu;
                   paramnew.mu=param.mu;
@@ -697,7 +580,6 @@ using namespace std;
                     newa=abs(param.a+samplefromnormal(0,sigmaa,&eng));
                     paramnew.a=newa;
                     
-                    /// ADDED Environmental contamination E
                     newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
                     
                     double logp=min(0.,newlogl+log(pdf(prioralpha,newa))-logl-log(pdf(prioralpha,param.a)));
@@ -709,23 +591,23 @@ using namespace std;
                   /** End update a **/
                     
                     
-                    /**update param.b ***/
+                  /**update param.b ***/
                     
-                    paramnew.a=param.a;
+                  paramnew.a=param.a;
                   if(exogenous){
                     newmub = (foi-paramnew.a)/meanPrev; 
                     newsigmab = sqrt(sigmaa*sigmaa/(meanPrev*meanPrev+sigmab*sigmab));
                     newb=abs(samplefromnormal(newmub,newsigmab,&eng));
                     
                     paramnew.b=newb;
-                    // ADDED Environmental contamination E
+
                     newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
                     //cout <<"param.b="<<param.b<<", logl="<<logl<<", newparam.b="<<paramnew.b<<", newlogl="<<newlogl<<endl;
                     //logp=min(0.,newlogl+log(pdf(priorbeta,newb))-logl-log(pdf(priorbeta,param.b)));
                     //p=exp(logp);
                     // Multiplicative term of proposal distribution is still missing!
                       
-                      propratio = exp((newb*newb-param.b*param.b + 2*newmub*(param.b-newb))/(2*newsigmab*newsigmab));
+                    propratio = exp((newb*newb-param.b*param.b + 2*newmub*(param.b-newb))/(2*newsigmab*newsigmab));
                     p=min(1.,propratio*exp(newlogl-logl)*pdf(priorbeta,newb)/pdf(priorbeta,param.b));
                     r=samplefromrealuniform(0, 1, &eng);
                     if(r<p){param.b=newb;logl=newlogl;baccepted+=1;}
@@ -738,7 +620,7 @@ using namespace std;
                 
                 /**update param.a ***/
                   paramnew.b=param.b;
-                  /// ADDED
+
                   paramnew.c=param.c;
                   paramnew.nu=param.nu;
                   paramnew.mu=param.mu;
@@ -752,7 +634,6 @@ using namespace std;
                     newa=abs(param.a+samplefromnormal(0,sigmaa,&eng));
                     paramnew.a=newa;
                     
-                    /// ADDED Environmental contamination E
                     newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
                     
                     double logp=min(0.,newlogl+log(pdf(prioralpha,newa))-logl-log(pdf(prioralpha,param.a)));
@@ -769,7 +650,7 @@ using namespace std;
                   if(exogenous){
                     newb=abs(param.b + samplefromnormal(0,sigmab,&eng));
                     paramnew.b=newb;
-                    // ADDED Environmental contamination E
+
                     newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
                     //cout <<"param.b="<<param.b<<", logl="<<logl<<", newparam.b="<<paramnew.b<<", newlogl="<<newlogl<<endl;
                     //logp=min(0.,newlogl+log(pdf(priorbeta,newb))-logl-log(pdf(priorbeta,param.b)));
@@ -781,37 +662,19 @@ using namespace std;
                   }
                   /** End update b **/
                     
-                    /**update param.nu **/
-                    /// param.nu is fixed throughout the simulation
-                  /*
-                    paramnew.c = param.c;
-                  newnu=abs(param.nu+samplefromnormal(0,sigmanu,&eng));
-                  paramnew.nu=newnu;
-                  
-                  // ADDED
-                  if(addingenvironment ==1) updateenvironment(paramnew,I,N,E,paramnew.E0,numberofwards,maxdate);
-                  
-                  // ADDED Environmental contamination E
-                  newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
-                  //cout <<"param.nu="<<param.nu<<", logl="<<logl<<", newparam.nu="<<paramnew.nu<<", newlogl="<<newlogl<<endl;
-                  p=min(1.,exp(newlogl-logl)*pdf(priornu,newnu)/pdf(priornu,param.nu));
-                  r=samplefromrealuniform(0, 1, &eng);
-                  if(r<p){param.nu=newnu;logl=newlogl;nuaccepted+=1;}
-                  **/
-                    /** End update nu **/
+                  /**update param.nu **/
+                  /// param.nu is fixed throughout the simulation
+                  /** End update nu **/
                     
-                    /**update param.mu ***/
-                    paramnew.b = param.b;
+                  /**update param.mu ***/
+                  paramnew.b = param.b;
                   paramnew.nu = param.nu;
                   
                   newmu=abs(param.mu + samplefromnormal(0,sigmamu,&eng));
                   paramnew.mu=newmu;
                   
-                  // ADDED
-                  //if(addingenvironment ==1) updateenvironment(paramnew,I,N,E,numberofwards,maxdate);
                   if(addingenvironment ==1) updateenvironment2(paramnew,I,N,admissionstate,acquisition,acquisitionday,admissionday,dischargeday,E,E_stay,E_dis,numberofwards,maxdate);
                   
-                  // ADDED Environmental contamination E
                   newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
                   //cout <<"param.mu="<<param.mu<<", logl="<<logl<<", newparam.mu="<<paramnew.mu<<", newlogl="<<newlogl<<endl;
                   p=min(1.,exp(newlogl-logl)*pdf(priormu,newmu)/pdf(priormu,param.mu));
@@ -820,15 +683,14 @@ using namespace std;
                   
                   /** End update mu **/
                     
-                    //ADDED
                   /**update param.c ***/
-                    paramnew.mu = param.mu;
+                  paramnew.mu = param.mu;
                   meanE = (paramnew.nu/paramnew.mu)*meanPrev;
                   newsigmac=sqrt(sigmaa*sigmaa/(meanE*meanE) + sigmab*sigmab*(meanPrev*meanPrev)/(meanE*meanE) + sigmac*sigmac);
                   newmuc=(foi-paramnew.a-paramnew.b*meanPrev)/meanE;
                   newc=abs(samplefromnormal(newmuc, newsigmac,&eng));
                   paramnew.c=newc;
-                  // ADDED Environmental contamination E
+
                   newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
                   //cout <<"param.c="<<param.c<<", logl="<<logl<<", newparam.c="<<paramnew.c<<", newlogl="<<newlogl<<endl;
                   // Adjust the acceptance ratio, since proposal density is not symmetric anymore.
@@ -838,33 +700,11 @@ using namespace std;
                   if(r<p){param.c=newc;logl=newlogl;caccepted+=1;}
                   
                   /** End update c **/
-                    
-                    /**update E0 **/
-                    /*
-                    paramnew.mu = param.mu;
-                  newE0=abs(param.E0+samplefromnormal(0,sigmanu,&eng));
-                  paramnew.E0=newE0;
-                  
-                  // ADDED
-                  //if(addingenvironment ==1) updateenvironment(paramnew,I,N,E,numberofwards,maxdate);
-                  if(addingenvironment ==1) updateenvironment2(paramnew,I,N,admissionstate,acquisition,acquisitionday,admissionday,dischargeday,E,E_stay,E_dis,numberofwards,maxdate);
-                  
-                  // ADDED Environmental contamination E
-                  newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
-                  //cout <<"param.mu="<<param.mu<<", logl="<<logl<<", newparam.mu="<<paramnew.mu<<", newlogl="<<newlogl<<endl;
-                  p=min(1.,exp(newlogl-logl)*pdf(priorE0,newE0)/pdf(priorE0,param.E0));
-                  r=samplefromrealuniform(0, 1, &eng);
-                  if(r<p){param.E0=newE0;logl=newlogl;nuaccepted+=1;}
-                  else{ if(addingenvironment ==1) updateenvironment2(param,I,N,admissionstate,acquisition,acquisitionday,admissionday,dischargeday,E,E_stay,E_dis,numberofwards,maxdate);}
-                  */
-                    param.E0=(paramnew.nu/paramnew.mu)*meanPrev;
-                  
-                  /** End update E0 **/
               }
-              // END ADDED
+
               
-            }//end single parameter
-            else//multiple parameters
+            }// End single parameter
+            else //multiple parameters
             {
               /** start update a **/
                 
@@ -886,7 +726,7 @@ using namespace std;
                   paramnew.phi=param.phi;
                   paramnew.frequencydependence= param.frequencydependence;
                   paramnew.f=param.f;
-                  // ADDED Environmental contamination E
+
                   newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
                   //cout <<"param.a="<<param.a<<", logl="<<logl<<", newparam.a="<<paramnew.a<<", newlogl="<<newlogl<<endl;
                   //logp=min(0.,newlogl+log(pdf(prioralpha,newa))-logl-log(pdf(prioralpha,param.a)));
@@ -909,7 +749,7 @@ using namespace std;
                   }
                   paramnew.betavector.at(unit)=newbeta.at(unit);
                   paramnew.frequencydependence= param.frequencydependence;
-                  // ADDED Environmental contamination E
+
                   newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
                   
                   p=min(1.,exp(newlogl-logl)*pdf(priorbeta,newb)/pdf(priorbeta,param.b));
@@ -931,7 +771,7 @@ using namespace std;
                   }
                   paramnew.gammavector.at(unit)=newgamma.at(unit);
                   paramnew.frequencydependence= param.frequencydependence;
-                  // ADDED Environmental contamination E
+
                   newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
                   
                   p=min(1.,exp(newlogl-logl)*pdf(priorgamma,newc)/pdf(priorgamma,param.c));
@@ -939,33 +779,11 @@ using namespace std;
                   if(r<p){param.gammavector.at(unit)=newgamma.at(unit);logl=newlogl;}
                   /** End update c **/
                     
-                    // No update for nu, since param.nu = 1
-                  /**update param.nu
-                  newnuvector.at(unit)=abs(param.nuvector.at(unit)+samplefromnormal(0,sigmanu,&eng));
-                  
-                  for(ward=0;ward<numberofwards;ward++)
-                  {
-                    paramnew.alphavector.at(ward)=param.alphavector.at(ward);
-                    paramnew.betavector.at(ward)=param.betavector.at(ward);
-                    paramnew.gammavector.at(ward)=param.gammavector.at(ward);
-                    paramnew.nuvector.at(ward)=param.nuvector.at(ward);
-                    paramnew.muvector.at(ward)=param.muvector.at(ward);
-                  }
-                  paramnew.nuvector.at(unit)=newnuvector.at(unit);
-                  paramnew.frequencydependence= param.frequencydependence;
-                  // ADDED Environmental contamination E
-                  newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
-                  
-                  p=min(1.,exp(newlogl-logl)*pdf(priornu,newnu)/pdf(priornu,param.nu));
-                  r=samplefromrealuniform(0, 1, &eng);
-                  if(r<p){param.nuvector.at(unit)=newnuvector.at(unit);logl=newlogl;}
-                  /** End update nu **/
                     
-                    /**update param.mu **/
-                    newmuvector.at(unit)=abs(param.muvector.at(unit)+samplefromnormal(0,sigmamu,&eng));
+                  /**update param.mu **/
+                  newmuvector.at(unit)=abs(param.muvector.at(unit)+samplefromnormal(0,sigmamu,&eng));
                   
-                  for(ward=0;ward<numberofwards;ward++)
-                  {
+                  for(ward=0;ward<numberofwards;ward++){
                     paramnew.alphavector.at(ward)=param.alphavector.at(ward);
                     paramnew.betavector.at(ward)=param.betavector.at(ward);
                     paramnew.gammavector.at(ward)=param.gammavector.at(ward);
@@ -974,78 +792,66 @@ using namespace std;
                   }
                   paramnew.muvector.at(unit)=newmuvector.at(unit);
                   paramnew.frequencydependence= param.frequencydependence;
-                  // ADDED Environmental contamination E
+
                   newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,paramnew,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
                   
                   p=min(1.,exp(newlogl-logl)*pdf(priormu,newmu)/pdf(priormu,param.mu));
                   r=samplefromrealuniform(0, 1, &eng);
                   if(r<p){param.muvector.at(unit)=newmuvector.at(unit);logl=newlogl;}
                   /** End update mu **/
-                    // END ADDED
-                  
                 }
             }// End update multiple parameters
             
             /**calculate number of false negative tests,
             could be changed in changeloglandI as well, to avoid running over all culures, but gain limited
             **/
-              //truepositiveandfalsenegative(&truepositive,&falsenegative,culturearray,admissionday,colstatus,startperiod,endperiod);
+            //truepositiveandfalsenegative(&truepositive,&falsenegative,culturearray,admissionday,colstatus,startperiod,endperiod);
             falsenegativefunction(&falsenegative,culturearray,admissionday,colstatus,startperiod,endperiod);
             //cout << "TP="<<truepositive<<" FN="<<falsenegative<<endl;
             
-            /********************************************************************************
-              Update param.phi
-            Sample from beta-distribution, see web appendix AJE Worby
-            Suppose X~Gamma(1,α) and Y~Gamma(1,β). Then Z=X/(X+Y) has distribution Beta(α,β)
-            *********************************************************************************/
-              x=samplefromgamma(aa+truepositive,1.,&eng);
+            /**********************************************************************************
+             * Update param.phi
+             * Sample from beta-distribution, see web appendix AJE Worby
+             * Suppose X~Gamma(1,α) and Y~Gamma(1,β). Then Z=X/(X+Y) has distribution Beta(α,β)
+             *********************************************************************************/
+            x=samplefromgamma(aa+truepositive,1.,&eng);
             y=samplefromgamma(bb+falsenegative,1.,&eng);
             logl-=truepositive*log(param.phi)+falsenegative*log(1.-param.phi);
             param.phi=x/(x+y);
             logl+=truepositive*log(param.phi)+falsenegative*log(1.-param.phi);
-            //cout << "Update param.phi" << endl;
-            //cout << "logl = "<< logl << endl;
             /*End update phi*/
-              /* NOTE: Code can be made slightly faster by updating falsenegative, posatadmission and negatadmission in file changeloglandI.cpp */
-              //cout <<"unitd="<<unit<<endl;
-            /*********************************************************************************
-              Update param.f
-            Sample from beta-distribution, see web appendix AJE Worby
-            Suppose X~Gamma(1,α) and Y~Gamma(1,β). Then Z=X/(X+Y) has distribution Beta(α,β)
-            *********************************************************************************/
-              numberposatadmisison(&posatadmission,&negatadmission, admissionstate,admissionday,startperiod, endperiod);
+            /* NOTE: Code can be made slightly faster by updating falsenegative, posatadmission and negatadmission in file changeloglandI.cpp */
+
+            /**********************************************************************************
+             * Update param.f
+             * Sample from beta-distribution, see web appendix AJE Worby
+             * Suppose X~Gamma(1,α) and Y~Gamma(1,β). Then Z=X/(X+Y) has distribution Beta(α,β)
+             *********************************************************************************/
+            numberposatadmisison(&posatadmission,&negatadmission, admissionstate,admissionday,startperiod, endperiod);
             x=samplefromgamma(aa+posatadmission,1.,&eng);
             y=samplefromgamma(bb+negatadmission,1.,&eng);
-            //cout <<"unite"<<unit<<endl;
+
             logl-=posatadmission*log(param.f)+negatadmission*log(1.-param.f);
             param.f=x/(x+y);
             logl+=posatadmission*log(param.f)+negatadmission*log(1.-param.f);
-            //cout << "Update param.f" << endl;
-            //cout << "logl = "<< logl << endl;
-            /*End update f*/
           }
     }
     
     /**********************************************************************************
       Update environmental contamination after parameter update
     **********************************************************************************/
-      //if(addingenvironment ==1) updateenvironment(param,I,N,E,numberofwards,maxdate);
     if(addingenvironment ==1) updateenvironment2(param,I,N,admissionstate,acquisition,acquisitionday,admissionday,dischargeday,E,E_stay,E_dis,numberofwards,maxdate);
-    
-    // ADDED Environmental contamination E
+
     if(onlyaugmented==1) newlogl=loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,param,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
     
     /**********************************************************************************
-    /** Update augmented data
-    **********************************************************************************/
-        for(dummy=0;dummy<factoraugmented;dummy++)
-        {
+     * Update augmented data
+     *********************************************************************************/
+        for(dummy=0;dummy<factoraugmented;dummy++){
           donothing=0;
           event=samplefromintuniform(0,2,&eng);
-          //cout <<"event="<<event<<endl;
-          switch(event)
-          {
-            case 0:   /**move a colonization time*/
+          switch(event){
+            case 0: /// move a colonization time
               thesize=(int)(listdefpos.size()+listtemppos.size());
             if (thesize>0)
             {
@@ -1059,17 +865,12 @@ using namespace std;
                 patient=listtemppos.at(index-listdefpos.size());
               }
               r=samplefromrealuniform(0, 1, &eng);
-              if(r<w)
-              {/* positive at admission*/
+              if(r<w){ /// positive on admission 
                 newadmissionstate=1;
-                
-                // ADDED
                 newacquisition=0;
                 newacquisitionday=0;
-                //
               }
-              else
-              {/* negative at admission*/
+              else{ /// negative at admission*/
                   if(possibleacquistiondays.at(patient)<=0){donothing=1;}
                 else{
                   newadmissionstate=0;
@@ -1086,105 +887,76 @@ using namespace std;
             }
             else{donothing=1;}
             break;
-            case 1:  /** add a colonization time */
+            case 1: /// add a colonization time 
               if(listneverpos.size()>0)
               {
                 index=samplefromintuniform(0,(int)listneverpos.size()-1,&eng);
                 patient=listneverpos.at(index);
                 r=samplefromrealuniform(0, 1, &eng);
-                if(r<w)
-                {
-                  /*patient admitted positive */
+                if(r<w){ /// patient admitted positive
                     newadmissionstate=1;
                     newacquisition=0;
                     newacquisitionday=0;
                     q=(double)listneverpos.size()/w/(double)(listtemppos.size()+1);
                 }
-                else
-                {
-                  /* patient uncolonized upon admission */
-                    //cout <<"patient uncolonized upon admission"<<endl;
+                else{ /// patient uncolonized upon admission */
                   newadmissionstate=0;
                   newacquisition=1;
-                  //cout <<"choices="<<possibleacquistiondays.at(patient)-1;
                   indexday=samplefromintuniform(0,possibleacquistiondays.at(patient)-1,&eng);
-                  //cout<<" indexday="<<indexday<<endl;
                   newacquisitionday=indexday;
                   q=(double)listneverpos.size()*possibleacquistiondays.at(patient)/(1.-w)/(double)(listtemppos.size()+1);
                 }
               }
             else{donothing=1;}
-            //cout<<"end case 1"<<endl;
             break;
-            case 2:   /**remove a colonzation time */
-              if(listtemppos.size()>0)
-              {
+            case 2: /// remove a colonzation time */
+              if(listtemppos.size()>0){
                 index=samplefromintuniform(0,(int)listtemppos.size()-1,&eng);
                 patient=listtemppos.at(index);
                 newadmissionstate=0;
                 newacquisition=0;
                 newacquisitionday=0;
-                if(admissionstate.at(patient)==1)
-                {
+                if(admissionstate.at(patient)==1){
                   q=listtemppos.size()*w/(double)(listneverpos.size()+1);
                 }
-                else
-                {
+                else{
                   q=listtemppos.size()*(1-w)/(double)(listneverpos.size()+1)/(possibleacquistiondays.at(patient));
                 }
               }
             else{donothing=1;}
-            //cout<<"end case 2"<<endl;
             break;
             default:  donothing=1;break;
-            
           }
-          if(donothing==0)//something is changing!
-          {
+          if(donothing==0){ ///something is changing!
             oldacquisition= acquisition.at(patient);
             oldacquisitionday=acquisitionday.at(patient);
             oldadmissionstate=admissionstate.at(patient);
             oldlogl=logl;
-            //cout << "oldlogl = " << oldlogl << endl;
             
             /*
               changeloglandI(patient,oldacquisitionday,oldadmissionstate,oldacquisition,newacquisitionday,newadmissionstate,newacquisition,
                              startperiod,endperiod,&logl,param,present,I,N,colstatus,culturearray,cultureperpatient,whereabouts,numberofacquisitions,admissionday,multipleparameters);
             */
-              
-              
-              // ADDED
+
             // Change vectors acquisition to be used in function loglikelihood
             if(addingenvironment == 1){
               acquisition.at(patient)=newacquisition;
               acquisitionday.at(patient)=newacquisitionday;
               admissionstate.at(patient)=newadmissionstate;
-              // Change I according to changes in acquisition, acquisitionday, admissionstate etc.
+              /// Change I according to changes in acquisition, acquisitionday, admissionstate etc.
               numberofinfectiouspatients2(I,whereabouts,colstatus,admissionday,acquisitionday,admissionstate,acquisition,numberofacquisitions,maxdate,numberofwards);
               
-              //updateenvironment(param,I,N,E,numberofwards,maxdate);
               updateenvironment2(param,I,N,admissionstate,acquisition,acquisitionday,admissionday,dischargeday,E,E_stay,E_dis,numberofwards,maxdate);
               // Include Environmenmtal Contamination E, use "normal" loglikelihood function for added environmental contamination
               logl = loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,param,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
-              //cout << "logl=" << logl << endl;
             } else{
               changeloglandI(patient,oldacquisitionday,oldadmissionstate,oldacquisition,newacquisitionday,newadmissionstate,newacquisition,
                              startperiod,endperiod,&logl,param,present,I,N,colstatus,culturearray,cultureperpatient,whereabouts,numberofacquisitions,admissionday,multipleparameters);
-              //cout << "logl = " << logl << endl;
             }
-            // END ADDED
-            
-            
-            //logp=min(0.,logl-oldlogl+log(q));
-            //p=exp(logp);
             p=min(1.,exp(logl-oldlogl)*q);
             r=samplefromrealuniform(0, 1, &eng);
             
-            if(r>p)/* no change, recover originalvalues */
-            {
-              //cout <<"no change, recover originalvalues"<<endl;
-              
-              // ADDED
+            if(r>p){/// no change, recover originalvalues
               // Change back (recover original values)
               if(addingenvironment == 1){
                 acquisition.at(patient)=oldacquisition;
@@ -1192,18 +964,13 @@ using namespace std;
                 admissionstate.at(patient)=oldadmissionstate;
                 numberofinfectiouspatients2(I,whereabouts,colstatus,admissionday,acquisitionday,admissionstate,acquisition,numberofacquisitions,maxdate,numberofwards);
                 
-                //updateenvironment(param,I,N,E,numberofwards,maxdate);
                 updateenvironment2(param,I,N,admissionstate,acquisition,acquisitionday,admissionday,dischargeday,E,E_stay,E_dis,numberofwards,maxdate);
                 logl = loglikelihood(acquisitionday,acquisition,culturearray,N,I,numberofacquisitions,admissionstate,param,startperiod,endperiod,admissionday,multipleparameters,E,addingenvironment);
               } else{
                 changeloglandI(patient,newacquisitionday,newadmissionstate,newacquisition,oldacquisitionday,oldadmissionstate,oldacquisition,startperiod,endperiod,&logl,param,present,I,N,colstatus,culturearray,cultureperpatient,whereabouts,numberofacquisitions,admissionday,multipleparameters);
               }
-              // END ADDED
-              
             }
-            else
-            {
-              
+            else{
               if(addingenvironment == 0){
                 acquisition.at(patient)=newacquisition;
                 acquisitionday.at(patient)=newacquisitionday;
@@ -1225,8 +992,7 @@ using namespace std;
           // cout<< "logl in augmented data = "<<logl<<"\n";
         }
     
-    // Compute mean prevalence 
-    
+    /// Compute mean prevalence 
     int itotal=0, ntotal=0;
     for(unit=0;unit<numberofwards;unit++){
       for(day=0;day<maxdate;day++){
@@ -1236,122 +1002,103 @@ using namespace std;
     }
     meanPrev = (double)itotal/(double)ntotal;
     
-    
-    /** Exact computation of contribution of each transmission route **/
-      /**
-      double pinfection=0.0, endogenous=0.0, exogenous=0.0, env=0.0;
-    for(unit=0;unit<numberofwards;unit++){
-      for(patient=0; patient<numberofpatients; patient++){
-        if(admissionstate.at(patient)==1) numberimportations += 1; // Count number of importations to determine its contribution
-        if(acquisition.at(patient)==1){
-          acqday = acquisitionday.at(patient);
-          pacquisitionbyroute(param,I.at(unit).at(acqday),N.at(unit).at(acqday),E.at(unit).at(acqday),endogenous,exogenous,env,pinfection,error);
-          contralpha+=endogenous/pinfection;
-          contrbeta+=exogenous/pinfection;
-          contrE+=env/pinfection;
-        }
-      }
-    }
-    **/
+  
+    if(i/thinning==(i+thinning-1)/thinning){
+      /** Computing contribution of each transmission route *************/
+      /** ONLY FOR FREQUENCY DEPENDENCE *********************************/
+      numberofinfectiouspatients2(I,whereabouts,colstatus,admissionday,acquisitionday,admissionstate,acquisition,numberofacquisitions,maxdate,numberofwards);
+      contralpha=0.0; contrbeta=0.0; contrE=0.0; contrCrossT=0.0; contrEnv=0.0;
+      double betaPart=0.0, envPart=0.0;
+      numberimportations = 0;
       
-      
-      if(i/thinning==(i+thinning-1)/thinning)
-      {
-        /** Computing contribution of each transmission route *************/
-          /** ONLY FOR FREQUENCY DEPENDENCE *********************************/
-          numberofinfectiouspatients2(I,whereabouts,colstatus,admissionday,acquisitionday,admissionstate,acquisition,numberofacquisitions,maxdate,numberofwards);
-        contralpha=0.0; contrbeta=0.0; contrE=0.0; contrCrossT=0.0; contrEnv=0.0;
-        double betaPart=0.0, envPart=0.0;
-        numberimportations = 0;
-        
-        for(unit=0;unit<numberofwards;unit++){
-          for(patient=0; patient<numberofpatients; patient++){
-            if(admissionstate.at(patient)==1) numberimportations += 1;
-            if(acquisition.at(patient)==1){
-              acqday = admissionday.at(patient)+acquisitionday.at(patient);
-              try{
-                forceofinfection = (double)endogenous*param.a+(double)exogenous*param.b*((double)I.at(unit).at(acqday)/(double)N.at(unit).at(acqday))+(double)addingenvironment*param.c*E.at(unit).at(acqday);
-              } catch(const std::out_of_range& e1) {
-                cout <<"Out of range in forceofinfection: "<<"Patient "<<patient<<", admissionday="<< admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<< endl;
-              }
-              contralpha+=(double)endogenous*param.a/forceofinfection;
-              try{
-                betaPart=(double)exogenous*param.b*((double)I.at(unit).at(acqday)/(double)N.at(unit).at(acqday))/forceofinfection;
-                contrbeta+=betaPart;
-              } catch(const std::out_of_range& e2) {
-                cout<<"Out of range in contrbeta: "<<"Patient "<<patient<<", admissionday="<<admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<<endl;
-              }
-              try{
-                contrE+=(double)addingenvironment*param.c*E.at(unit).at(acqday)/forceofinfection;
-              } catch(const std::out_of_range& e3) {
-                cout<<"Out of range in contrE: "<<"Patient "<<patient<<", admissionday="<<admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<<endl;
-              }
-              try{
-                contrCrossT+=betaPart+(double)addingenvironment*param.c*(E_stay.at(unit).at(acqday))/forceofinfection;
-              } catch(const std::out_of_range& e4) {
-                cout<<"Out of range in contrCrossT."<<"Patient "<<patient<<", admissionday="<<admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<<endl;
-              }
-              try{
-                envPart = (double)addingenvironment*param.c*(E.at(unit).at(acqday)-E_stay.at(unit).at(acqday))/forceofinfection;
-                contrEnv+= envPart;
-              } catch(const std::out_of_range& e5) {
-                cout<<"Out of range in contrEnv."<<"Patient "<<patient<<", admissionday="<<admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<<endl;
-              }
-              //if(envPart<0) cout<<"EnvPart negative. EnvPart="<<envPart<<", Patient "<<patient<<", admissionday="<<admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<<endl;
+      for(unit=0;unit<numberofwards;unit++){
+        for(patient=0; patient<numberofpatients; patient++){
+          if(admissionstate.at(patient)==1) numberimportations += 1;
+          if(acquisition.at(patient)==1){
+            acqday = admissionday.at(patient)+acquisitionday.at(patient);
+            try{
+              forceofinfection = (double)endogenous*param.a+(double)exogenous*param.b*((double)I.at(unit).at(acqday)/(double)N.at(unit).at(acqday))+(double)addingenvironment*param.c*E.at(unit).at(acqday);
+            } catch(const std::out_of_range& e1) {
+              cout <<"Out of range in forceofinfection: "<<"Patient "<<patient<<", admissionday="<< admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<< endl;
             }
+            contralpha+=(double)endogenous*param.a/forceofinfection;
+            try{
+              betaPart=(double)exogenous*param.b*((double)I.at(unit).at(acqday)/(double)N.at(unit).at(acqday))/forceofinfection;
+              contrbeta+=betaPart;
+            } catch(const std::out_of_range& e2) {
+              cout<<"Out of range in contrbeta: "<<"Patient "<<patient<<", admissionday="<<admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<<endl;
+            }
+            try{
+              contrE+=(double)addingenvironment*param.c*E.at(unit).at(acqday)/forceofinfection;
+            } catch(const std::out_of_range& e3) {
+              cout<<"Out of range in contrE: "<<"Patient "<<patient<<", admissionday="<<admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<<endl;
+            }
+            try{
+              contrCrossT+=betaPart+(double)addingenvironment*param.c*(E_stay.at(unit).at(acqday))/forceofinfection;
+            } catch(const std::out_of_range& e4) {
+              cout<<"Out of range in contrCrossT."<<"Patient "<<patient<<", admissionday="<<admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<<endl;
+            }
+            try{
+              envPart = (double)addingenvironment*param.c*(E.at(unit).at(acqday)-E_stay.at(unit).at(acqday))/forceofinfection;
+              contrEnv+= envPart;
+            } catch(const std::out_of_range& e5) {
+              cout<<"Out of range in contrEnv."<<"Patient "<<patient<<", admissionday="<<admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<<endl;
+            }
+            //if(envPart<0) cout<<"EnvPart negative. EnvPart="<<envPart<<", Patient "<<patient<<", admissionday="<<admissionday.at(patient)<<", dischargeday="<<dischargeday.at(patient)<<", acquisitionday="<<acqday<<endl;
           }
         }
+      }
         
-        totaldaysatrisk(daysatrisk,totalacquisitions,numberofacquisitions,N,I,startperiod,endperiod);
-        myfile <<i<<",";
-        myfile <<param.f<<",";
-        myfile <<param.phi<<",";
-        myfile <<logl<<",";
-        myfile <<numberimportations<<",";
-        myfile <<meanPrev<<",";
-        myfile <<param.a<<",";
-        myfile <<param.b<<",";
-        myfile <<param.c<<",";
-        myfile <<param.nu<<",";
-        myfile <<param.mu<<",";
-        myfile <<param.E0<<",";
-        
-        myfile <<truepositive<<","<<falsenegative<<",";
-        myfile <<(double)aaccepted/(double)inew<<","<<(double)baccepted/(double)inew<<",";
-        myfile <<(double)caccepted/(double)inew<<","<<(double)muaccepted/(double)inew<<",";
-        myfile <<(double)sigmaa<<","<<(double)sigmab<<","<<(double)sigmac<<","<<(double)sigmamu<<",";
-        
-        for(unit=0;unit<numberofwards;unit++){
-          myfile <<"acq["<<unit<<"]="<<totalacquisitions.at(unit);
-          myfile <<", daysatr["<<unit<<"]="<<daysatrisk.at(unit)<<",";
-        }
-        
-        myfile <<contralpha<<",";
-        myfile <<contrbeta<<",";
-        myfile <<contrE<<", ";
-        myfile <<contrCrossT<<", ";
-        myfile <<contrEnv<<"\n";
+      totaldaysatrisk(daysatrisk,totalacquisitions,numberofacquisitions,N,I,startperiod,endperiod);
+      myfile <<i<<",";
+      myfile <<param.f<<",";
+      myfile <<param.phi<<",";
+      myfile <<logl<<",";
+      myfile <<numberimportations<<",";
+      myfile <<meanPrev<<",";
+      myfile <<param.a<<",";
+      myfile <<param.b<<",";
+      myfile <<param.c<<",";
+      myfile <<param.nu<<",";
+      myfile <<param.mu<<",";
+      myfile <<param.E0<<",";
+      
+      myfile <<truepositive<<","<<falsenegative<<",";
+      myfile <<(double)aaccepted/(double)inew<<","<<(double)baccepted/(double)inew<<",";
+      myfile <<(double)caccepted/(double)inew<<","<<(double)muaccepted/(double)inew<<",";
+      myfile <<(double)sigmaa<<","<<(double)sigmab<<","<<(double)sigmac<<","<<(double)sigmamu<<",";
+      
+      for(unit=0;unit<numberofwards;unit++){
+        myfile <<"acq["<<unit<<"]="<<totalacquisitions.at(unit);
+        myfile <<", daysatr["<<unit<<"]="<<daysatrisk.at(unit)<<",";
+      }
+      
+      myfile <<contralpha<<",";
+      myfile <<contrbeta<<",";
+      myfile <<contrE<<", ";
+      myfile <<contrCrossT<<", ";
+      myfile <<contrEnv<<"\n";
    
-          /**
-          if(i==numberofupdates-thinning){
-            // Save data set into file: Patient nr, admission state,
-            // acquisition day, discharge day
-            mypatients << "Patient, " << "admstate, " <<"acqstate, "<< "acqday, " << "admday, " << "disday" << endl;
-            for(int p=0;p<dischargeday.size();p++){
-              mypatients << p << ", "<<admissionstate.at(p)<<", " <<acquisition.at(p)<<", "<< admissionday.at(p)+acquisitionday.at(p) << ", "<< admissionday.at(p) << ", " << dischargeday.at(p) << endl;
-            }
-            mypatients<<"Number of acquisitions per day" << endl;
-            for(unit=0;unit<numberofwards;unit++){
-              for(day=0;day<maxdate-1;day++){
-                mypatients<<numberofacquisitions.at(unit).at(day)<<", ";
-              }
-              mypatients<<numberofacquisitions.at(unit).at(maxdate-1)<<endl;
-            }
-          }
-        * **/
-      }
+      /**
+       if(i==numberofupdates-thinning){
+       // Save data set into file: Patient nr, admission state,
+       // acquisition day, discharge day
+       mypatients << "Patient, " << "admstate, " <<"acqstate, "<< "acqday, " << "admday, " << "disday" << endl;
+       for(int p=0;p<dischargeday.size();p++){
+       mypatients << p << ", "<<admissionstate.at(p)<<", " <<acquisition.at(p)<<", "<< admissionday.at(p)+acquisitionday.at(p) << ", "<< admissionday.at(p) << ", " << dischargeday.at(p) << endl;
+       }
+       mypatients<<"Number of acquisitions per day" << endl;
+       for(unit=0;unit<numberofwards;unit++){
+       for(day=0;day<maxdate-1;day++){
+       mypatients<<numberofacquisitions.at(unit).at(day)<<", ";
+       }
+       mypatients<<numberofacquisitions.at(unit).at(maxdate-1)<<endl;
+       }
+       }
+      * **/
+    } // End if(i/thinning==(i+thinning-1)/thinning)
     
-    /*
+    /**
     if(i/thinningfoi==(i+thinningfoi-1)/thinningfoi){
      for(unit=0;unit<numberofwards;unit++){
        for(patient=0; patient<numberofpatients-1; patient++){
@@ -1425,23 +1172,24 @@ using namespace std;
       cout <<"numImp="<<numberimportations<<", ";
       cout <<"meanPrev="<<meanPrev<<", ";
       cout <<"logl="<<logl<<"\n ";
-    }
+    } // End if(i/thinningscreen==(i+thinningscreen-1)/thinningscreen)
     i+=1;
-  }
+  } // End while(i<numberofupdates)
   
   cout<<"Number of changes (sigma) = "<<nchange<<endl;
   mystartfile<<nchange*(double)updatestochangesigma/10+1<<endl;
   cout<<"Line = "<< nchange*(double)updatestochangesigma/10 + 1<<endl;
+  
   /**********************************************************************
-  * Compute running time
-  * *******************************************************************/
-    time_t timer2 = time(NULL);
+   * Compute running time
+   * *******************************************************************/
+  time_t timer2 = time(NULL);
   double seconds = difftime(timer2, timer);
   cout<< "Time to compute = "<<seconds<<"s\n";
   mystartfile<<seconds<<endl;
   /*********************************************************************/
     
-    /// CLOSE STREAMS
+  /// CLOSE STREAMS
   mystartfile.close();
   myfile.close();
   
@@ -1455,9 +1203,9 @@ using namespace std;
   myenvdisfile.close();
   
   /*
-    mypatients.close();
+  mypatients.close();
   colstat.close();
   */
     
     return 0;
-  }
+}
